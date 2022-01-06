@@ -1,5 +1,7 @@
 # Docker MongoDB Tools
 
+Ubuntu based image with mongodb-tools installed
+
 ## Pull image
 
 ```sh
