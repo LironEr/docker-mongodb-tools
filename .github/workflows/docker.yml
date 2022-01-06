@@ -1,0 +1,82 @@
+name: Build and Publish
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  release:
+    types:
+      - published
+
+env:
+  TEST_TAG: lironer/mongodb-tools:test
+  DEFAULT_MONGO_TOOLS_VERSION: "100.1.1"
+
+jobs:
+  build-and-push-docker-image:
+    name: Build Docker image and push to repositories
+    permissions:
+      packages: write
+      contents: read
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: |
+            lironer/mongodb-tools
+            ghcr.io/lironer/mongodb-tools
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern=v{{major}}
+          labels: |
+            maintainer=LironEr
+            org.opencontainers.image.description=Ubuntu based image with mongodb-tools installed
+
+      - name: Build test docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          build-args: |
+            MONGO_TOOLS_VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] || env.DEFAULT_MONGO_TOOLS_VERSION }}
+          load: true
+          tags: ${{ env.TEST_TAG }}
+
+      - name: Test
+        run: |
+          docker run --rm ${{ env.TEST_TAG }} mongodump --version
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to Github Packages
+        uses: docker/login-action@v1
+        if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image and push to Docker Hub and GitHub Container Registry
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          build-args: |
+            MONGO_TOOLS_VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] || env.DEFAULT_MONGO_TOOLS_VERSION }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          push: ${{ github.event_name == 'release' && github.event.action == 'published' }}
