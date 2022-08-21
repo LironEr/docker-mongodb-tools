@@ -1,5 +1,8 @@
 # Docker MongoDB Tools
 
+[![dockerhub](https://img.shields.io/docker/v/lironer/mongodb-tools)](https://hub.docker.com/r/lironer/mongodb-tools)
+[![dockerhub](https://img.shields.io/docker/pulls/lironer/mongodb-tools)](https://hub.docker.com/r/lironer/mongodb-tools)
+
 Ubuntu based image with mongodb-tools installed
 
 ## Pull image
