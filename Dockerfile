@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.10
 
 ARG MONGO_TOOLS_VERSION=100.1.1
 
