@@ -1,6 +1,6 @@
-FROM ubuntu:22.10
+FROM ubuntu:22.04
 
-ARG MONGO_TOOLS_VERSION=100.1.1
+ARG MONGO_TOOLS_VERSION=100.8.0
 
 RUN \
   apt-get update && apt-get install -y wget && \
